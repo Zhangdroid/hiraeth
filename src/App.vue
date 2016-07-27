@@ -4,41 +4,18 @@
   </div>
 </template>
 
-<script>
+<script lang="babel">
+import { getCameraVideoSrc } from './services/camera'
 export default {
   async ready () {
-    await this.getCameraIDs()
-    this.getVideo()
+    this.videoSrc = await getCameraVideoSrc()
   },
   data () {
     return {
-      cameraIds: [],
-      currentCamera: 1,
       videoSrc: ''
     }
   },
   methods: {
-    getCameraIDs () {
-      MediaStreamTrack.getSources((sources) => {
-        sources.forEach(source => {
-          console.log(source)
-          if (source.kind === 'video') {
-            this.cameraIds.push(source.id)
-          }
-        })
-      })
-    },
-    getVideo () {
-      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia
-      navigator.getUserMedia({
-        video: {
-          optional: [{sourceId: this.cameraIds[this.currentCamera]}]
-        }
-      }, localMediaStream => {
-        this.videoSrc = window.URL.createObjectURL(localMediaStream)
-      }, err => {
-        console.log(err)
-      })
     }
   },
   components: {
