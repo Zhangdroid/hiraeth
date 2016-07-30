@@ -1,15 +1,19 @@
 <template>
   <div id="app">
     <div class="toolbar">
-      <span class="camera--icon" @click="changeCamera"></span>
+      <span class="icon camera--icon" @click="changeCamera"></span>
     </div>
     <video :src="videoSrc" autoplay class="video" v-el:video></video>
     <div class="toolbox__bottom" v-el:toolbox :class="{'toolbox__bottom--preview': state === 'preview'}">
       <button v-show="state === 'shoot'" class="shoot--button" @click="shoot"></button>
-      <button @click="next" style="font-size: 50px">next</button>
-      <button @click="delete" style="font-size: 50px">delete</button>
     </div>
     <image class="thumbnail" :src="imageSrc" :class="{'preview': state === 'preview'}" v-el:thumbnail @click="preview"></image>
+    <div v-show="state === 'preview'">
+      <span v-show="files.length" class="icon delete--icon" @click="delete"></span>
+      <span class="icon close--icon" @click="close"></span>
+      <span v-show="current !== files.length - 1"class="icon next--icon" @click="next"></span>
+      <span v-show="current !== 0"class="icon prev--icon" @click="prev"></span>
+    </div>
   </div>
 </template>
 
@@ -52,9 +56,14 @@ export default {
       this.state = 'preview'
       this.files = await getAllFiles()
     },
-    async next () {
+    next () {
       if (this.files[this.current].fullPath) {
         this.current = this.current < this.files.length - 1 ? this.current + 1 : 0
+      }
+    },
+    prev () {
+      if (this.files[this.current].fullPath) {
+        this.current = this.current >= 1 ? this.current - 1 : this.files.length - 1
       }
     },
     async delete () {
@@ -63,6 +72,9 @@ export default {
         await deleteFile(this.files[this.current].fullPath)
         this.files.$remove(this.files[this.current])
       }
+    },
+    close () {
+      this.state = 'shoot'
     },
     async changeCamera () {
       this.front = !this.front
@@ -105,7 +117,7 @@ body {
   transition: height .3s ease;
 }
 .toolbox__bottom--preview {
-  height: 100vh;
+  height: 100%;
 }
 .shoot--button {
   width: 8vh;
@@ -120,14 +132,42 @@ body {
   top: 0;
   padding: 20px;
 }
-.camera--icon {
+.icon {
   display: inline-block;
   width: 8vw;
   height: 8vw;
-  background-image: url("./assets/icons/change_camera.svg");
   background-size: cover;
   background-position: center;
   opacity: .8;
+}
+.camera--icon {
+  background-image: url("./assets/icons/change_camera.svg");
+}
+.delete--icon {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 5vh;
+  background-image: url("./assets/icons/remove.svg");
+}
+.close--icon {
+  position: fixed;
+  top: 5vw;
+  left: 5vw;
+  background-image: url("./assets/icons/close.svg");
+}
+.next--icon, .prev--icon {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.next--icon {
+  left: 3vw;
+  background-image: url("./assets/icons/arrows_right.svg");
+}
+.prev--icon {
+  right: 3vw;
+  background-image: url("./assets/icons/arrows_left.svg");
 }
 .thumbnail {
   position: fixed;
