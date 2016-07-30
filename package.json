@@ -1,7 +1,7 @@
 {
   "name": "hiraeth",
-  "version": "1.0.0",
-  "description": "A Vue.js project",
+  "version": "0.0.1",
+  "description": "A Progressive Web App Example",
   "author": "张卓 <contrary.zhuo@gmail.com>",
   "private": true,
   "scripts": {
