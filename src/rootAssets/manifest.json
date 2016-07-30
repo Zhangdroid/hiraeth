@@ -22,5 +22,8 @@
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#009688",
-  "theme_color": "#009688"
+  "theme_color": "#009688",
+  "permissions": [
+    "fileSystem"
+  ]
 }
