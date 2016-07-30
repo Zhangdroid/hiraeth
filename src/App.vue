@@ -1,22 +1,33 @@
 <template>
   <div id="app">
-    <video :src="videoSrc" autoplay class="video" v-el:video></video>
-    <div class="toolbox__bottom">
-      <button class="shoot--button" @click="shoot"></button>
+    <div class="toolbar">
+      <span class="camera--icon" @click="changeCamera"></span>
     </div>
+    <video :src="videoSrc" autoplay class="video" v-el:video></video>
+    <div class="toolbox__bottom" v-el:toolbox :class="{'toolbox__bottom--preview': state === 'preview'}">
+      <button v-show="state === 'shoot'" class="shoot--button" @click="shoot"></button>
+      <button @click="next" style="font-size: 50px">next</button>
+      <button @click="delete" style="font-size: 50px">delete</button>
+    </div>
+    <image class="thumbnail" :src="imageSrc" :class="{'preview': state === 'preview'}" v-el:thumbnail @click="preview"></image>
   </div>
 </template>
 
 <script lang="babel">
 import { getCameraVideoSrc } from './services/camera'
-import { saveFile, getFile, getAllFiles } from './services/file'
+import { saveFile, getFile, deleteFile, getAllFiles } from './services/file'
 export default {
   async ready () {
     this.videoSrc = await getCameraVideoSrc()
+    this.files = await getAllFiles()
   },
   data () {
     return {
-      videoSrc: ''
+      state: 'shoot',
+      front: false,
+      videoSrc: '',
+      files: [],
+      current: 0
     }
   },
   methods: {
@@ -27,28 +38,43 @@ export default {
       const ctx = canvas.getContext('2d')
       ctx.drawImage(this.$els.video, 0, 0)
       canvas.toBlob(blob => {
-        saveFile(blob).then(e => {
-          console.log(e)
+        saveFile(blob).then(path => {
+          this.files.unshift({
+            fullPath: path
+          })
+          this.current = 0
         }).catch(err => {
           console.log(err)
         })
       }, 'image/jpeg')
     },
-    getAllImages () {
-      getAllFiles().then(files => {
-        files.forEach(file => {
-          getFile(file.fullPath).then(result => {
-            console.log(result)
-          }).catch(err => {
-            console.log(err)
-          })
-        })
-      }).catch(err => {
-        console.log(err)
-      })
+    async preview () {
+      this.state = 'preview'
+      this.files = await getAllFiles()
+    },
+    async next () {
+      if (this.files[this.current].fullPath) {
+        this.current = this.current < this.files.length - 1 ? this.current + 1 : 0
+      }
+    },
+    async delete () {
+      console.log(this.files, this.current)
+      if (this.files[this.current].fullPath) {
+        await deleteFile(this.files[this.current].fullPath)
+        this.files.$remove(this.files[this.current])
+      }
+    },
+    async changeCamera () {
+      this.front = !this.front
+      this.videoSrc = await getCameraVideoSrc({ front: this.front })
     }
   },
-  components: {
+  asyncComputed: {
+    async imageSrc () {
+      if (this.files.length) {
+        return await getFile(this.files[this.current].fullPath)
+      }
+    }
   }
 }
 </script>
@@ -68,23 +94,51 @@ body {
 }
 .toolbox__bottom {
   position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   bottom: 0;
   width: 100%;
   height: 16vh;
   background-color: rgba(255, 255, 255, .6);
   backdrop-filter: blur(25px);
+  transition: height .3s ease;
+}
+.toolbox__bottom--preview {
+  height: 100vh;
 }
 .shoot--button {
-  position: fixed;
-  bottom: 25px;
-  left: 50%;
-  z-index: 9999;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 60px;
+  width: 8vh;
+  height: 8vh;
   background-color: rgba(255, 0, 0, .6);
   border: none;
   border-radius: 50%;
   outline: none;
+}
+.toolbar {
+  position: fixed;
+  top: 0;
+  padding: 20px;
+}
+.camera--icon {
+  display: inline-block;
+  width: 8vw;
+  height: 8vw;
+  background-image: url("./assets/icons/change_camera.svg");
+  background-size: cover;
+  background-position: center;
+  opacity: .8;
+}
+.thumbnail {
+  position: fixed;
+  left: 5vw;
+  bottom: 8vw;
+  width: 10vw;
+  transition: all .3s ease;
+}
+.preview {
+  left: 20vw;
+  width: 60vw;
+  bottom: 20vh;
 }
 </style>
