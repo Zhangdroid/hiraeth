@@ -9,11 +9,12 @@ window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileS
  */
 export function saveFile (file) {
   return new Promise((resolve, reject) => {
-    navigator.webkitPersistentStorage.requestQuota(20 * 1024 * 1024, grantedBytes => {
+    navigator.webkitPersistentStorage.requestQuota(10 * 1024 * 1024, grantedBytes => {
       window.requestFileSystem(window.PERSISTENT, grantedBytes, fs => {
-        fs.root.getFile(`/${generateFileName()}.jpg`, { create: true }, fileEntry => {
+        const path = `/${generateFileName()}.jpg`
+        fs.root.getFile(path, { create: true }, fileEntry => {
           fileEntry.createWriter(fileWriter => {
-            fileWriter.onwriteend = e => { resolve(e) }
+            fileWriter.onwriteend = e => { resolve(path) }
             fileWriter.onerror = e => { reject(e) }
             fileWriter.write(file)
           })
@@ -51,12 +52,25 @@ export function getFile (path) {
       window.requestFileSystem(window.PERSISTENT, grantedBytes, fs => {
         fs.root.getFile(path, {}, fileEntry => {
           fileEntry.file(file => {
-            console.log(file)
             const reader = new FileReader()
             reader.onloadend = e => {
               resolve(e.target.result)
             }
             reader.readAsDataURL(file)
+          }, err => { reject(err) })
+        }, err => { reject(err) })
+      }, err => { reject(err) })
+    }, err => { reject(err) })
+  })
+}
+
+export function deleteFile (path) {
+  return new Promise((resolve, reject) => {
+    navigator.webkitPersistentStorage.requestQuota(10 * 1024 * 1024, grantedBytes => {
+      window.requestFileSystem(window.PERSISTENT, grantedBytes, fs => {
+        fs.root.getFile(path, { create: false }, fileEntry => {
+          fileEntry.remove(e => {
+            resolve(e)
           }, err => { reject(err) })
         }, err => { reject(err) })
       }, err => { reject(err) })
