@@ -1,5 +1,7 @@
 # Hiraeth
 
+![screencast](https://raw.githubusercontent.com/Zhangdroid/hiraeth/master/src/assets/screencast.gif)
+
 Hiraeth is a camera progressive web app. Still work in progress.
 
 ## Build Setup
